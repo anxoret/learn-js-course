@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div class="root">
+      <div>
+        <button id="btn1">Show simple message!</button>
+      </div>
+    </div>
+  
+    <script type="module">
+      import NotificationMessage from "./notification.js";
+  
+      const getRandomIndex = (min, max) => {
+        let rand = min + Math.random() * (max + 1 - min);
+  
+        return Math.floor(rand);
+      };
+  
+      const notificationStatuses = ["success", "error"];
+      const notificationHeaderText = "Notification";
+      const notificationBodyTexts = ["tomato", "orange", "grape", "apple", "banana"];
+  
+      let notificationBlock;
+  
+      btn1.addEventListener("click", () => {
+        if (notificationBlock) {
+          notificationBlock.destroy();
+        }
+  
+        notificationBlock = new NotificationMessage({
+          status: notificationStatuses[getRandomIndex(0, 1)],
+          headerText: "Notification",
+          bodyText: notificationBodyTexts[getRandomIndex(0, 4)],
+          duration: 3000
+        });
+  
+        const root = document.querySelector(".root");
+        root.append(notificationBlock.element);
+      });
+  
+    </script>
+  </body>
+</html>
