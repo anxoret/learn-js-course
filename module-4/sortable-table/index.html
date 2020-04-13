@@ -13,7 +13,7 @@
 <div>
   <div>
     <select id="field">
-      <option selected value="title">title</option>
+      <option selected value="title">name</option>
       <option value="quantity">quantity</option>
       <option value="price">price</option>
       <option value="sales">sales</option>
@@ -40,14 +40,7 @@
       id: 'images',
       index: 0,
       title: 'Image',
-      sortable: false,
-      template: data => {
-        return `
-          <div class="sortable-table__cell">
-            <img class="sortable-table-image" alt="Image" src="${data[0].url}">
-          </div>
-        `;
-      }
+      sortable: false
     },
     {
       id: 'title',

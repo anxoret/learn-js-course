@@ -3,6 +3,7 @@ export default class SortableTable {
   subElements = {};
   headersConfig = [];
   data = [];
+  sortedBody;
 
   constructor(headersConfig, {
     data = []
@@ -27,19 +28,19 @@ export default class SortableTable {
     header.setAttribute("data-elem", "header");
     sortableTable.append(header);
 
-    this.headersConfig.forEach(headerConfig => {
+    this.headersConfig.forEach(headerConf => {
       let headerSortableTableCell = document.createElement('div');
-      headerSortableTableCell.setAttribute("data-name", `${headerConfig.id}`);
+      headerSortableTableCell.setAttribute("data-name", `${headerConf.id}`);
       headerSortableTableCell.className = "sortable-table__cell";
       
-      if (headerConfig.sortable) {
+      if (headerConf.sortable) {
         headerSortableTableCell.setAttribute("data-sortable", "");
       }
       
-      if (headerConfig.title === "Name") {
-        headerSortableTableCell.innerHTML = `<span>${headerConfig.title}</span><span class="sortable-table__sort-arrow_asc"></span></span>`
+      if (headerConf.title === "Name") {
+        headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span><span class="sortable-table__sort-arrow_asc"></span></span>`
       } else {
-        headerSortableTableCell.innerHTML = `<span>${headerConfig.title}</span>`
+        headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span>`
       }
 
       header.append(headerSortableTableCell);
@@ -49,57 +50,90 @@ export default class SortableTable {
     body.setAttribute("data-elem", "body");
     body.className = "sortable-table__body";
 
-    this.data.forEach(dataElement => {
-      // for (let headerIndex = 0; headerIndex < this.headersConfig.length; headerIndex++) {
-      //   let dataElementTd = document.createElement('td');
-
-      //   if (this.headersConfig[headerIndex].id === 'images') {
-      //     dataElementTd.innerHTML = this.headersConfig[headerIndex].template(dataElement.images);
-      //   } else {
-      //     dataElementTd.textContent = dataElement[this.headersConfig[headerIndex].id];
-      //   }
-
-      //   body.append(dataElementTd);
-      // }
+    this.data.forEach((dataElement, dataIndex) => {
+      let sortableTableRow = document.createElement("a");
+      sortableTableRow.className = "sortable-table__row";
+      sortableTableRow.setAttribute("href", `${this.data[dataIndex].images[0].url}`);
 
       this.headersConfig.forEach((header, headerIndex) => {
-        let sortableTableRow = document.createElement("a");
-        sortableTableRow.className = "sortable-table__row";
-        // sortableTableRow.setAttribute("href", `${this.data.images.url}`);
+        let sortableTableCell = document.createElement("div");
+        sortableTableCell.className = "sortable-table__cell";
 
         if (this.headersConfig[headerIndex].id === 'images') {
-          sortableTableRow.innerHTML = this.headersConfig[headerIndex].template(dataElement.images);
+          let img = document.createElement("img");
+          img.className = "sortable-table-image";
+          img.setAttribute("alt", "Image");
+          img.setAttribute("src", `${this.data[dataIndex].images[0].url}`);
+          sortableTableCell.append(img);
         } else {
-          sortableTableRow.textContent = dataElement[this.headersConfig[headerIndex].id];
+          sortableTableCell.textContent = dataElement[this.headersConfig[headerIndex].id];
         }
 
-        body.append(sortableTableRow);
+        sortableTableRow.append(sortableTableCell);
       });
+
+      body.append(sortableTableRow);
 
       this.element.append(body);
     });
 
   }
 
-  sortNumbers () {
-    
+  sortNumbers (field, order) {
+    const makeSorting = (a, b) => {
+      if (a[field] > b[field]) return 1; 
+      if (a[field] == b[field]) return 0; 
+      if (a[field] < b[field]) return -1;
+    };
+
+    if (order === "asc") {
+      this.data.sort(makeSorting);
+    } else {
+      this.data.sort(makeSorting).reverse();
+    }
+
+    this.render();
   }
 
-  sortStrings () {
-    
+  sortStrings (array, order) {
+    const makeSorting = (array, direction) => {
+      return array.sort((a, b) =>
+        direction * a.localeCompare(b, 'default', {caseFirst: 'upper'}));
+    };
+
+    // switch (order) {
+    //   case 'asc':
+    //     return makeSorting(array, 1);
+    //   case 'desc':
+    //     return makeSorting(array, -1);
+    //   default:
+    //     return makeSorting(array, 1);
   }
 
   sort (field, order) {
     let headerIndex;
 
-    this.headersConfig.forEach((headerConfig, index) => {
-      if (headerConfig.hasOwnProperty(field)) {
+    this.headersConfig.forEach((headerConf, index) => {
+      if (headerConf.hasOwnProperty(field)) {
         headerIndex = index;
-        return
+        return;
       }
     });
+
+    console.log(this.headerIndex);
+
+    switch (this.headersConfig[headerIndex].sortType) {
+      case "number":
+        sortNumbers(field, order);
+        break;
+      
+      case "string":
+        sortStrings(field, order);
+        break;
     
-    if (!this.headersConfig[headerIndex].sortable) return;
+      default:
+        break;
+    }
 
   }
 
@@ -109,7 +143,7 @@ export default class SortableTable {
 
   destroy() {
     this.remove();
-    this.subElements = {};
+    // this.subElements = {};
   }
 }
 
