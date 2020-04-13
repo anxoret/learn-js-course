@@ -14,35 +14,69 @@ export default class SortableTable {
   }
 
   render() {
-    this.element = document.createElement('table');
+    this.element = document.createElement('div');
+    this.element.setAttribute("data-elem", "productsContainer");
+    this.element.className="products-list__container";    
 
-    let headersTr =  document.createElement('tr');
+    const sortableTable = document.createElement('div');
+    sortableTable.className="sortable-table";
+    this.element.append(sortableTable);
 
-    this.headersConfig.forEach(header => {
-      let headerTh = document.createElement('th');
-      headerTh.textContent = header.title;
+    const header = document.createElement('div');
+    header.className="sortable-table__header sortable-table__row";
+    header.setAttribute("data-elem", "header");
+    sortableTable.append(header);
 
-      headersTr.append(headerTh);
-    });
-    
-    this.element.append(headersTr);
-
-    this.data.forEach(dataElement => {
-      let dataElementTr = document.createElement('tr');
+    this.headersConfig.forEach(headerConfig => {
+      let headerSortableTableCell = document.createElement('div');
+      headerSortableTableCell.setAttribute("data-name", `${headerConfig.id}`);
+      headerSortableTableCell.className = "sortable-table__cell";
       
-      for (let headerIndex = 0; headerIndex < this.headersConfig.length; headerIndex++) {
-        let dataElementTd = document.createElement('td');
-
-        if (this.headersConfig[headerIndex].id === 'images') {
-          dataElementTd.innerHTML = this.headersConfig[headerIndex].template(dataElement.images);
-        } else {
-          dataElementTd.textContent = dataElement[this.headersConfig[headerIndex].id];
-        }
-
-        dataElementTr.append(dataElementTd);
+      if (headerConfig.sortable) {
+        headerSortableTableCell.setAttribute("data-sortable", "");
+      }
+      
+      if (headerConfig.title === "Name") {
+        headerSortableTableCell.innerHTML = `<span>${headerConfig.title}</span><span class="sortable-table__sort-arrow_asc"></span></span>`
+      } else {
+        headerSortableTableCell.innerHTML = `<span>${headerConfig.title}</span>`
       }
 
-      this.element.append(dataElementTr);
+      header.append(headerSortableTableCell);
+    });
+
+    let body = document.createElement('div');
+    body.setAttribute("data-elem", "body");
+    body.className = "sortable-table__body";
+
+    this.data.forEach(dataElement => {
+      // for (let headerIndex = 0; headerIndex < this.headersConfig.length; headerIndex++) {
+      //   let dataElementTd = document.createElement('td');
+
+      //   if (this.headersConfig[headerIndex].id === 'images') {
+      //     dataElementTd.innerHTML = this.headersConfig[headerIndex].template(dataElement.images);
+      //   } else {
+      //     dataElementTd.textContent = dataElement[this.headersConfig[headerIndex].id];
+      //   }
+
+      //   body.append(dataElementTd);
+      // }
+
+      this.headersConfig.forEach((header, headerIndex) => {
+        let sortableTableRow = document.createElement("a");
+        sortableTableRow.className = "sortable-table__row";
+        // sortableTableRow.setAttribute("href", `${this.data.images.url}`);
+
+        if (this.headersConfig[headerIndex].id === 'images') {
+          sortableTableRow.innerHTML = this.headersConfig[headerIndex].template(dataElement.images);
+        } else {
+          sortableTableRow.textContent = dataElement[this.headersConfig[headerIndex].id];
+        }
+
+        body.append(sortableTableRow);
+      });
+
+      this.element.append(body);
     });
 
   }
