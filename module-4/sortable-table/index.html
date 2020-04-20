@@ -1,4 +1,5 @@
 <!doctype html>
+
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="style.css">
@@ -8,75 +9,76 @@
     }
   </style>
 </head>
+
 <body>
 
-<div>
   <div>
-    <select id="field">
-      <option selected value="title">name</option>
-      <option value="quantity">quantity</option>
-      <option value="price">price</option>
-      <option value="sales">sales</option>
-    </select>
+    <div>
+      <select id="field">
+        <option selected value="title">name</option>
+        <option value="quantity">quantity</option>
+        <option value="price">price</option>
+        <option value="sales">sales</option>
+      </select>
+    </div>
+    <div>
+      <select id="order">
+        <option selected value="asc">asc</option>
+        <option value="desc">desc</option>
+      </select>
+    </div>
+
+    <button id="sort">Sort</button>
   </div>
-  <div>
-    <select id="order">
-      <option selected value="asc">asc</option>
-      <option value="desc">desc</option>
-    </select>
-  </div>
 
-  <button id="sort">Sort</button>
-</div>
+  <div id="root"></div>
 
-<div id="root"></div>
+  <script type="module">
+    import SortableTable from "./index.js";
+    import data from "./products-data.js";
 
-<script type="module">
-  import SortableTable from "./index.js";
-  import data from "./products-data.js";
+    export const header = [
+      {
+        id: 'images',
+        index: 0,
+        title: 'Image',
+        sortable: false
+      },
+      {
+        id: 'title',
+        title: 'Name',
+        sortable: true,
+        sortType: 'string'
+      },
+      {
+        id: 'quantity',
+        title: 'Quantity',
+        sortable: true,
+        sortType: 'number'
+      },
+      {
+        id: 'price',
+        title: 'Price',
+        sortable: true,
+        sortType: 'number'
+      },
+      {
+        id: 'sales',
+        title: 'Sales',
+        sortable: true,
+        sortType: 'number'
+      },
+    ];
 
-  export const header = [
-    {
-      id: 'images',
-      index: 0,
-      title: 'Image',
-      sortable: false
-    },
-    {
-      id: 'title',
-      title: 'Name',
-      sortable: true,
-      sortType: 'string'
-    },
-    {
-      id: 'quantity',
-      title: 'Quantity',
-      sortable: true,
-      sortType: 'number'
-    },
-    {
-      id: 'price',
-      title: 'Price',
-      sortable: true,
-      sortType: 'number'
-    },
-    {
-      id: 'sales',
-      title: 'Sales',
-      sortable: true,
-      sortType: 'number'
-    },
-  ];
+    const sortableTable = new SortableTable(header, { data });
 
-  const sortableTable = new SortableTable(header, { data });
+    root.append(sortableTable.element);
 
-  root.append(sortableTable.element);
+    sort.addEventListener('click', () => {
+      const fieldValue = field.value;
+      const orderValue = order.value;
 
-  sort.addEventListener('click', () => {
-    const fieldValue = field.value;
-    const orderValue = order.value;
-
-    sortableTable.sort(fieldValue, orderValue);
-  });
-</script>
+      sortableTable.sort(fieldValue, orderValue);
+    });
+  </script>
 </body>
