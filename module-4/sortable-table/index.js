@@ -8,6 +8,7 @@ export default class SortableTable {
   } = {}) {
     this.headersConfig = headersConfig;
     this.data = data;
+    this.sortArrow = {};
 
     this.render();
   }
@@ -27,14 +28,14 @@ export default class SortableTable {
       headerSortableTableCell.className = "sortable-table__cell";
       
       if (headerConf.sortable) {
-        headerSortableTableCell.setAttribute("data-sortable", "");
+        headerSortableTableCell.setAttribute("data-sortable", "true");
       }
-      
-      if (headerConf.title === "Name") {
-        headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span><span class="sortable-table__sort-arrow_asc"></span></span>`
-      } else {
-        headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span>`
+
+      if (this.sortArrow.field === headerConf.id) {
+        headerSortableTableCell.setAttribute("data-order", `${this.sortArrow.order}`);
       }
+
+      headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span><span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>`;
 
       header.append(headerSortableTableCell);
     });
@@ -139,6 +140,9 @@ export default class SortableTable {
       default:
         break;
     }
+
+    this.sortArrow.field = field;
+    this.sortArrow.order = order;
 
     this.render();
 
