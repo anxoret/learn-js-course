@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test:all": "jest",
-    "test:jest": "jest --findRelatedTests module-3/**/*.spec.js",
+    "test:jest": "jest --findRelatedTests module-4/**/*.spec.js",
     "start": "static-server --port 8080 ./module-3/column-chart"
   },
   "repository": {
