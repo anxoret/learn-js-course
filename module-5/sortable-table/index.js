@@ -2,13 +2,13 @@ export default class SortableTable {
   element;
   headersConfig = [];
   data = [];
+  sortArrow = {};
 
   constructor(headersConfig, {
     data = []
   } = {}) {
     this.headersConfig = headersConfig;
     this.data = data;
-    this.sortArrow = {};
 
     this.render();
   }
@@ -85,8 +85,6 @@ export default class SortableTable {
       this.element.append(this.createTable());
     }
 
-    console.log("Новая таблица")
-
     this.addClickEvents();
   }
 
@@ -123,7 +121,7 @@ export default class SortableTable {
 
   sort (field, order) {
     let headerIndex;
-
+    
     this.headersConfig.forEach((headerConf, index) => {
       if (headerConf.id === field) {
         headerIndex = index;
@@ -147,8 +145,6 @@ export default class SortableTable {
     this.sortArrow.field = field;
     this.sortArrow.order = order;
 
-    console.log(order)
-
     this.render();
 
   }
@@ -163,30 +159,33 @@ export default class SortableTable {
     this.removeClickEvents();
   }
 
+  sortEvent(event) {
+    let fieldValue = event.target.parentElement.getAttribute("data-name");
+    let orderValue;
+
+    if (!this.sortArrow.order || this.sortArrow.order === "desc") {
+      orderValue = "asc";
+    } else {
+      orderValue = "desc";
+    }
+    
+    this.sort(fieldValue, orderValue);
+  }
+
   addClickEvents() {
     let titles = Array.from(this.element.querySelectorAll(".sortable-table__cell[data-sortable='true']"));
-    console.log(titles.length);
 
     titles.forEach(title => {
-      console.log(title);
-      title.addEventListener('click', () => {
-        console.log("Запущена!")
-        let fieldValue = title.getAttribute("data-name");
-        let orderValue;
-
-        if (!this.sortArrow.order || this.sortArrow.order === "desc") {
-          orderValue = "asc";
-        } else {
-          orderValue = "desc";
-        }
-
-        this.sort(fieldValue, orderValue);
-      });
+      title.addEventListener('click', this.sortEvent.bind(this));
     });
   }
 
   removeClickEvents() {
-    // console.log(this.element);
+    let titles = Array.from(this.element.querySelectorAll(".sortable-table__cell[data-sortable='true']"));
+
+    titles.forEach(title => {
+      title.removeEventListener('click', this.sortEvent.bind(this));
+    });
   }
 }
 
