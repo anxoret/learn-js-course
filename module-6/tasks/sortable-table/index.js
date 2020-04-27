@@ -1,14 +1,31 @@
+import fetchJson from "../../utils/fetch-json.js";
+
+const BACKEND_URL = 'https://course-js.javascript.ru';
+
 export default class SortableTable {
   element;
   headersConfig = [];
   data = [];
+  pageSize = 30;
   sortArrow = {};
 
-  constructor(headersConfig, {
-    data = []
+  onSortClick = event => {
+    // ...logic
+  };
+
+  constructor(headersConfig = [], {
+    url = '',
+    // sorted = {
+    //   id: headersConfig.find(item => item.sortable).id,
+    //   order: 'asc'
+    // },
+    isSortLocally = false
   } = {}) {
+
     this.headersConfig = headersConfig;
-    this.data = data;
+    this.url = new URL(url, BACKEND_URL);
+    this.isSortLocally = isSortLocally;
+    this.headersConfig = headersConfig,
 
     this.render();
   }
@@ -45,36 +62,38 @@ export default class SortableTable {
     body.className = "sortable-table__body";
 
     this.data.forEach((dataElement, dataIndex) => {
-      let sortableTableRow = document.createElement("a");
-      sortableTableRow.className = "sortable-table__row";
-      sortableTableRow.setAttribute("href", `${this.data[dataIndex].images[0].url}`);
+      if (this.data[dataIndex].images.length) {
+        let sortableTableRow = document.createElement("a");
+        sortableTableRow.className = "sortable-table__row";
+        sortableTableRow.setAttribute("href", `${this.data[dataIndex].images[0].url}`);
 
-      this.headersConfig.forEach((header, headerIndex) => {
-        let sortableTableCell = document.createElement("div");
-        sortableTableCell.className = "sortable-table__cell";
+        this.headersConfig.forEach((header, headerIndex) => {
+          let sortableTableCell = document.createElement("div");
+          sortableTableCell.className = "sortable-table__cell";
 
-        if (this.headersConfig[headerIndex].id === 'images') {
-          let img = document.createElement("img");
-          img.className = "sortable-table-image";
-          img.setAttribute("alt", "Image");
-          img.setAttribute("src", `${this.data[dataIndex].images[0].url}`);
-          sortableTableCell.append(img);
-        } else {
-          sortableTableCell.textContent = dataElement[this.headersConfig[headerIndex].id];
-        }
+          if (this.headersConfig[headerIndex].id === 'images') {
+            let img = document.createElement("img");
+            img.className = "sortable-table-image";
+            img.setAttribute("alt", "Image");
+            img.setAttribute("src", `${this.data[dataIndex].images[0].url}`);
+            sortableTableCell.append(img);
+          } else {
+            sortableTableCell.textContent = dataElement[this.headersConfig[headerIndex].id];
+          }
 
-        sortableTableRow.append(sortableTableCell);
-      });
+          sortableTableRow.append(sortableTableCell);
+        });
 
-      body.append(sortableTableRow);
+        body.append(sortableTableRow);
 
-      sortableTable.append(body);
+        sortableTable.append(body);
+      }
     });
 
     return sortableTable;
   }
 
-  render () {
+  async render() {
     if (this.element) {
       this.element.innerHTML = "";
       this.element.append(this.createTable());
@@ -87,37 +106,31 @@ export default class SortableTable {
 
     this.addClickEvents();
   }
-
-  sortNumbers (array, field, order) {
-    const makeSorting = (a, b) => {
-      if (a[field] > b[field]) return 1; 
-      if (a[field] === b[field]) return 0; 
-      if (a[field] < b[field]) return -1;
-    };
-
-    if (order === "asc") {
-      array.sort(makeSorting);
+// products?_embed=subcategory.category&_sort=title&_order=asc&_start=0&_end=30
+  async loadData (field, order) {
+    console.log(this.url)
+    this.url.searchParams.append("_embed", "subcategory.category");
+    this.url.searchParams.append("_sort", field);
+    this.url.searchParams.append("_order", order);
+    this.url.searchParams.append("_start", 0);
+    this.url.searchParams.append("_end", this.pageSize);
+    console.log(this.url)
+    
+    let response = await fetch(this.url)
+    
+    if (response.ok) { // если HTTP-статус в диапазоне 200-299
+      this.data = await response.json();
+      console.log(this.data)
+      this.render();
     } else {
-      array.sort(makeSorting).reverse();
-    }
-
+      alert("Ошибка HTTP: " + response.status);
+    } 
+    
   }
 
-  sortStrings (array, field, order) {
-    const makeSorting = (array, field, order) => {
-      return array.sort((a, b) =>
-        order * a[field].localeCompare(b[field], 'default', { caseFirst: 'upper' }));
-    }
-
-    switch (order) {
-      case 'asc':
-        return makeSorting(array, field, 1);
-      case 'desc':
-        return makeSorting(array, field, -1);
-      default:
-        return makeSorting(array, field, 1);
-    }
-  }
+  // initEventListeners () {
+  //   this.subElements.header.addEventListener('pointerdown', this.onSortClick);
+  // }
 
   sort (field, order) {
     let headerIndex;
@@ -159,7 +172,12 @@ export default class SortableTable {
       orderValue = "desc";
     }
     
-    this.sort(fieldValue, orderValue);
+    if (this.isSortLocally === true) {
+      this.sort(fieldValue, orderValue);
+    } else {
+      this.loadData()
+    }
+    
   }
 
   addClickEvents() {
@@ -188,4 +206,3 @@ export default class SortableTable {
     this.removeClickEvents();
   }
 }
-
