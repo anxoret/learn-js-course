@@ -1,4 +1,4 @@
-import fetchJson from "../../utils/fetch-json.js";
+// import fetchJson from "../../utils/fetch-json.js";
 
 const BACKEND_URL = 'https://course-js.javascript.ru';
 
@@ -8,36 +8,28 @@ export default class SortableTable {
   data = [];
   pageSize = 30;
   sortArrow = {};
-
-  onSortClick = event => {
-    // ...logic
-  };
+  table = null;
+  tableHeader = null;
+  tableBody = null;
+  selectedSortHeaderCell = null;
 
   constructor(headersConfig = [], {
     url = '',
-    // sorted = {
-    //   id: headersConfig.find(item => item.sortable).id,
-    //   order: 'asc'
-    // },
     isSortLocally = false
   } = {}) {
 
     this.headersConfig = headersConfig;
     this.url = new URL(url, BACKEND_URL);
     this.isSortLocally = isSortLocally;
-    this.headersConfig = headersConfig,
+    this.headersConfig = headersConfig;
 
     this.render();
   }
 
-  createTable () {
-    const sortableTable = document.createElement('div');
-    sortableTable.className="sortable-table";
-
-    const header = document.createElement('div');
-    header.className="sortable-table__header sortable-table__row";
-    header.setAttribute("data-elem", "header");
-    sortableTable.append(header);
+  createTableHeader () {
+    this.tableHeader = document.createElement('div');
+    this.tableHeader.className="sortable-table__header sortable-table__row";
+    this.tableHeader.setAttribute("data-elem", "header");
 
     this.headersConfig.forEach(headerConf => {
       let headerSortableTableCell = document.createElement('div');
@@ -48,89 +40,136 @@ export default class SortableTable {
         headerSortableTableCell.setAttribute("data-sortable", "true");
       }
 
-      if (this.sortArrow.field === headerConf.id) {
-        headerSortableTableCell.setAttribute("data-order", `${this.sortArrow.order}`);
-      }
-
       headerSortableTableCell.innerHTML = `<span>${headerConf.title}</span><span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>`;
 
-      header.append(headerSortableTableCell);
+      this.tableHeader.append(headerSortableTableCell);
     });
 
-    let body = document.createElement('div');
-    body.setAttribute("data-elem", "body");
-    body.className = "sortable-table__body";
-
-    this.data.forEach((dataElement, dataIndex) => {
-      if (this.data[dataIndex].images.length) {
-        let sortableTableRow = document.createElement("a");
-        sortableTableRow.className = "sortable-table__row";
-        sortableTableRow.setAttribute("href", `${this.data[dataIndex].images[0].url}`);
-
-        this.headersConfig.forEach((header, headerIndex) => {
-          let sortableTableCell = document.createElement("div");
-          sortableTableCell.className = "sortable-table__cell";
-
-          if (this.headersConfig[headerIndex].id === 'images') {
-            let img = document.createElement("img");
-            img.className = "sortable-table-image";
-            img.setAttribute("alt", "Image");
-            img.setAttribute("src", `${this.data[dataIndex].images[0].url}`);
-            sortableTableCell.append(img);
-          } else {
-            sortableTableCell.textContent = dataElement[this.headersConfig[headerIndex].id];
-          }
-
-          sortableTableRow.append(sortableTableCell);
-        });
-
-        body.append(sortableTableRow);
-
-        sortableTable.append(body);
-      }
-    });
-
-    return sortableTable;
+    return this.tableHeader;
   }
 
-  async render() {
+  createEmptyTableBody () {
+    this.tableBody = document.createElement('div');
+    this.tableBody.setAttribute("data-elem", "body");
+    this.tableBody.className = "sortable-table__body";
+
+    return this.tableBody;
+  }
+
+  fillTableBodyWithData () {
+    this.tableBody.innerHTML = "";
+
+    if (this.data.length) {
+      this.data.forEach((dataElement, dataIndex) => {
+        if (this.data[dataIndex].images.length) {
+          let sortableTableRow = document.createElement("a");
+          sortableTableRow.className = "sortable-table__row";
+          sortableTableRow.setAttribute("href", `${this.data[dataIndex].images[0].url}`);
+  
+          this.headersConfig.forEach((header, headerIndex) => {
+            let sortableTableCell = document.createElement("div");
+            sortableTableCell.className = "sortable-table__cell";
+  
+            if (this.headersConfig[headerIndex].id === 'images') {
+              let img = document.createElement("img");
+              img.className = "sortable-table-image";
+              img.setAttribute("alt", "Image");
+              img.setAttribute("src", `${this.data[dataIndex].images[0].url}`);
+              sortableTableCell.append(img);
+            } else {
+              sortableTableCell.textContent = dataElement[this.headersConfig[headerIndex].id];
+            }
+  
+            sortableTableRow.append(sortableTableCell);
+          });
+  
+          this.tableBody.append(sortableTableRow);
+        }
+      });
+    } else {
+      let emptyPlaceholder = document.createElement('div');
+      emptyPlaceholder.setAttribute("data-elem", "emptyPlaceholder");
+      emptyPlaceholder.className = "sortable-table__empty-placeholder";
+      emptyPlaceholder.innerHTML = "<div><p>No products satisfies your filter criteria</p><button type='button' class='button-primary-outline'>Reset all filters</button></div>"
+      
+      this.tableBody.append(emptyPlaceholder);
+    }
+  }
+
+  createEmptyTable() {
+    this.table = document.createElement('div');
+    this.table.className="sortable-table";
+
+    this.table.append( this.createTableHeader() );
+    this.table.append( this.createEmptyTableBody() );
+
+    return this.table;
+  }
+
+  render() {
     if (this.element) {
       this.element.innerHTML = "";
-      this.element.append(this.createTable());
+      this.fillTableBody();
     } else {
       this.element = document.createElement('div');
       this.element.setAttribute("data-elem", "productsContainer");
       this.element.className="products-list__container";
-      this.element.append(this.createTable());
+      
+      for (let header of this.headersConfig) {
+        if (header.sortable === true) {
+          this.element.append(this.createEmptyTable());
+          this.addClickEvents();
+          this.loadData(header.id, "asc");
+          break;
+        }
+      }
+    }
+  }
+
+  async loadData (field, order) {
+    this.url = new URL(this.url, BACKEND_URL);
+
+    if (this.url.searchParams.has("_embed")) {
+      this.url.searchParams.set("_embed", "subcategory.category");
+    } else {
+      this.url.searchParams.append("_embed", "subcategory.category");
     }
 
-    this.addClickEvents();
-  }
-// products?_embed=subcategory.category&_sort=title&_order=asc&_start=0&_end=30
-  async loadData (field, order) {
-    console.log(this.url)
-    this.url.searchParams.append("_embed", "subcategory.category");
-    this.url.searchParams.append("_sort", field);
-    this.url.searchParams.append("_order", order);
-    this.url.searchParams.append("_start", 0);
-    this.url.searchParams.append("_end", this.pageSize);
-    console.log(this.url)
+    if (this.url.searchParams.has("_sort")) {
+      this.url.searchParams.set("_sort", field);
+    } else {
+      this.url.searchParams.append("_sort", field);
+    }
+
+    if (this.url.searchParams.has("_order")) {
+      this.url.searchParams.set("_order", order);
+    } else {
+      this.url.searchParams.append("_order", order);
+    }
+
+    if (this.url.searchParams.has("_start")) {
+      this.url.searchParams.set("_start", 0);
+    } else {
+      this.url.searchParams.append("_start", 0);
+    }
+
+    if (this.url.searchParams.has("_end")) {
+      this.url.searchParams.set("_end", this.pageSize);
+    } else {
+      this.url.searchParams.append("_end", this.pageSize);
+    }
     
-    let response = await fetch(this.url)
+    let response = await fetch(this.url);
     
-    if (response.ok) { // если HTTP-статус в диапазоне 200-299
+    if (response.ok) {
       this.data = await response.json();
-      console.log(this.data)
-      this.render();
+      this.sortArrow.field = field;
+      this.sortArrow.order = order;
+      this.fillTableBodyWithData();
     } else {
       alert("Ошибка HTTP: " + response.status);
     } 
-    
   }
-
-  // initEventListeners () {
-  //   this.subElements.header.addEventListener('pointerdown', this.onSortClick);
-  // }
 
   sort (field, order) {
     let headerIndex;
@@ -159,32 +198,43 @@ export default class SortableTable {
     this.sortArrow.order = order;
 
     this.render();
-
   }
 
   sortEvent(event) {
     let fieldValue = event.target.parentElement.getAttribute("data-name");
     let orderValue;
-
+    
     if (!this.sortArrow.order || this.sortArrow.order === "desc") {
       orderValue = "asc";
     } else {
       orderValue = "desc";
     }
-    
+
     if (this.isSortLocally === true) {
       this.sort(fieldValue, orderValue);
     } else {
-      this.loadData()
+      this.loadData(fieldValue, orderValue);
     }
-    
+
+    if (this.selectedSortHeaderCell) {
+      this.selectedSortHeaderCell.removeAttribute("data-order");
+    }
+
+    for (let headerConf of this.headersConfig) {
+      if (fieldValue === headerConf.id) {
+        let headerSortableTableCell = this.tableHeader.querySelector(`.sortable-table__cell[data-name='${headerConf.id}']`);
+        headerSortableTableCell.setAttribute("data-order", `${orderValue}`);
+
+        this.selectedSortHeaderCell = headerSortableTableCell;
+        break;       
+      }
+    }
   }
 
   addClickEvents() {
     let titles = Array.from(this.element.querySelectorAll(".sortable-table__cell[data-sortable='true']"));
-
     titles.forEach(title => {
-      title.addEventListener('click', this.sortEvent.bind(this));
+      title.addEventListener('pointerdown', this.sortEvent.bind(this));
     });
   }
 
@@ -192,7 +242,7 @@ export default class SortableTable {
     let titles = Array.from(this.element.querySelectorAll(".sortable-table__cell[data-sortable='true']"));
 
     titles.forEach(title => {
-      title.removeEventListener('click', this.sortEvent.bind(this));
+      title.removeEventListener('pointerdown', this.sortEvent.bind(this));
     });
   }
 
