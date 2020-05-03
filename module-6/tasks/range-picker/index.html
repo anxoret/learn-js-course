@@ -1,21 +1,44 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<style>
-  body {
-    background-color: var(--grey-light);
-    margin: 0;
-    padding: 50px 0;
-  }
-  .container {
-    display: flex;
-    justify-content: flex-end;
-    height: 100%;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-</style>
-<link rel="stylesheet" href="style.css">
-
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    :root {
+      --blue: #109cf1;
+      --dark-blue: #334d6e;
+      --light-blue: #cfebfc;
+      --middle-blue: #9fd7f9;
+      --yellow: #ffb946;
+      --red: #f7685b;
+      --green: #2ed47a;
+      --purple: #885af8;
+      --black: #192a3e;
+      --table-black: #323c47;
+      --table-grey: #707683;
+      --grey: #90a0b7;
+      --grey-light: #c2cfe0;
+      --grey-extra-light: #eff1f4;
+      --grey-skeleton: #f5f6f8;
+      --white: #ffffff;
+    }
+    body {
+      background-color: var(--grey-light);
+      margin: 0;
+      padding: 50px 0;
+    }
+    .container {
+      display: flex;
+      justify-content: flex-end;
+      height: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+  </style>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 <div id="holder" class="container"></div>
 
 <script type="module">
@@ -28,3 +51,6 @@
 
   holder.append(rangePicker.element);
 </script>
+
+</body>
+</html>
