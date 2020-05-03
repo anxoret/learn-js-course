@@ -108,13 +108,15 @@ export default class RangePicker {
     let fromSeconds = this.selected.from.getSeconds();
     let fromMilliseconds = this.selected.from.getMilliseconds();
 
-    let rangepickerCellButton = document.createElement("button");
-    rangepickerCellButton.setAttribute("type", "button");
-    rangepickerCellButton.setAttribute("data-value", `${fromYear}-${fromMonth}-${fromDay}T${fromHour}:${fromMinute}:${fromSeconds}.${fromMilliseconds}Z`);
-    rangepickerCellButton.className = "rangepicker__cell";
-    rangepickerCellButton.style.gridColumnStart = "5";
-    rangepickerCellButton.textContent = "1";
-    rangepickerCalendar.append(rangepickerCellButton);
+    while (condition) {
+      let rangepickerCellButton = document.createElement("button");
+      rangepickerCellButton.setAttribute("type", "button");
+      rangepickerCellButton.setAttribute("data-value", `${fromYear}-${fromMonth}-${fromDay}T${fromHour}:${fromMinute}:${fromSeconds}.${fromMilliseconds}Z`);
+      rangepickerCellButton.className = "rangepicker__cell";
+      rangepickerCellButton.style.gridColumnStart = "5";
+      rangepickerCellButton.textContent = "1";
+      rangepickerCalendar.append(rangepickerCellButton);
+    }
 
     return this.rangePicker;
   }
