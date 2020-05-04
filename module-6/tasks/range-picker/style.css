@@ -17,6 +17,19 @@
   --white: #ffffff;
 }
 
+body {
+  background-color: var(--grey-light);
+  margin: 0;
+  padding: 50px 0;
+}
+.container {
+  display: flex;
+  justify-content: flex-end;
+  height: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
 .rangepicker {
   position: relative;
 }
@@ -32,7 +45,7 @@
   border: 1px solid var(--grey-light);
   border-radius: 4px;
   outline: none;
-  background: var(--white) url("calendar-icon.svg") 16px center no-repeat;
+  background: var(--white) url("https://cdn.glitch.com/d8e34ff8-29f7-4496-9890-ea0129d919b9%2Fcalendar-icon.svg?v=1586857076745") 16px center no-repeat;
   background-size: 18px 18px;
 }
 
@@ -123,7 +136,7 @@
   justify-content: center;
   cursor: pointer;
   transition: 0.3s all;
-  background: url("angle-arrow-icon.svg") left center no-repeat;
+  background: url("https://cdn.glitch.com/d8e34ff8-29f7-4496-9890-ea0129d919b9%2Fangle-arrow-icon.svg?v=1586857068719") left center no-repeat;
   background-size: 9px 13px;
 }
 
