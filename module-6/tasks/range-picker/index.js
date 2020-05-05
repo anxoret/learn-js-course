@@ -19,10 +19,6 @@ export default class RangePicker {
     this.render();
   }
 
-  createRangePickerCalendar () {
-
-  }
-
   getDaysInMonth (monthNumber, dateObject) {
     let nextMonthNumber = ++monthNumber;
 
@@ -206,7 +202,6 @@ export default class RangePicker {
     rangePickerSelectorControlRight.className = "rangepicker__selector-control-right";
     rangePickerSelector.append(rangePickerSelectorControlRight);
 
-    // Calendar
     rangePickerSelector.append(this.createCalendar(this.selected.from, true));
     rangePickerSelector.append(this.createCalendar(this.selected.to, false));
 
