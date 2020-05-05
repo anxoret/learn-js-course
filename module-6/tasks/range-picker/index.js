@@ -1,8 +1,5 @@
 export default class RangePicker {
   element;
-  subElements = {};
-  // TODO: rename "selectingFrom"
-  selectingFrom = true;
   selected = {
     from: new Date(),
     to: new Date()
@@ -21,10 +18,6 @@ export default class RangePicker {
 
     this.render();
   }
-
-  // get template() {
-  //   // ...template here
-  // }
 
   createRangePickerCalendar () {
 
@@ -120,7 +113,6 @@ export default class RangePicker {
 
           } else if (dateCount > day) {
             rangepickerCellButton.className = "rangepicker__cell rangepicker__selected-between";
-            // this.selectedBetweenCells.push(rangepickerCellButton);
 
           } else {
             rangepickerCellButton.className = "rangepicker__cell";
@@ -133,7 +125,6 @@ export default class RangePicker {
           
           } else if (dateCount < day) {
             rangepickerCellButton.className = "rangepicker__cell rangepicker__selected-between";
-            // this.selectedBetweenCells.push(rangepickerCellButton);
 
           } else {
             rangepickerCellButton.className = "rangepicker__cell";
@@ -155,6 +146,39 @@ export default class RangePicker {
     return rangepickerCalendar;
   }
 
+  getDateStr (dateObject) {
+    let year = dateObject.getFullYear() + "";
+    let month = dateObject.getMonth() + 1 + "";
+    let day = dateObject.getDate() + "";
+
+    year = year.slice(-4, -2);
+    month = month.length < 2 ? "0" + month : month;
+    day = day.length < 2 ? "0" + day : day;
+
+    return `${month}/${day}/${year}`
+  }
+
+  changeRangePickerSelectedDates () {
+    let fromSpan = this.element.querySelector("span[data-elem='from']");
+    let toSpan = this.element.querySelector("span[data-elem='to']");
+
+    if (this.selectedFromCell !== null) {
+      let selectedFromCellData = Date.parse(this.selectedFromCell.getAttribute("data-value"));
+      this.selected.from = new Date(selectedFromCellData);
+      fromSpan.innerHTML = this.getDateStr(this.selected.from);
+    } else {
+      fromSpan.innerHTML = "**/**/**";
+    }
+
+    if (this.selectedToCell !== null) {
+      let selectedToCellData = Date.parse(this.selectedToCell.getAttribute("data-value"));
+      this.selected.to = new Date(selectedToCellData);
+      toSpan.innerHTML = this.getDateStr(this.selected.to);
+    } else {
+      toSpan.innerHTML = "**/**/**";
+    }
+  }
+
   createRangePicker () {
     this.rangePicker = document.createElement("div");
     this.rangePicker.className = "rangepicker rangepicker_open";
@@ -162,7 +186,7 @@ export default class RangePicker {
     let rangePickerInput = document.createElement("div");
     rangePickerInput.className = "rangepicker__input";
     rangePickerInput.setAttribute("data-elem", "input");
-    rangePickerInput.innerHTML = '<span data-elem="from">11/26/19</span> - <span data-elem="to">12/26/19</span>';
+    rangePickerInput.innerHTML = `<span data-elem="from">${this.getDateStr(this.selected.from)}</span> - <span data-elem="to">${this.getDateStr(this.selected.to)}</span>`;
     this.rangePicker.append(rangePickerInput);
 
     let rangePickerSelector = document.createElement("div");
@@ -198,15 +222,23 @@ export default class RangePicker {
   }
 
   selectDate (event) {
-    console.log(event.target)
-
     if (event.target === this.selectedFromCell) {
-      this.selectedFromCell.classList.remove("rangepicker__selected-from");
-      this.selectedFromCell = null;
+      if (this.selectedToCell === null) {
+        this.selectedFromCell.classList.remove("rangepicker__selected-from");
+        this.selectedFromCell = null;
 
-      this.rangePickerCells.forEach(cell => {
-        cell.classList.remove("rangepicker__selected-between");
-      });
+      } else {
+        this.selectedFromCell.classList.remove("rangepicker__selected-from");
+        this.selectedToCell.classList.remove("rangepicker__selected-to");
+
+        this.selectedFromCell= this.selectedToCell;
+        this.selectedFromCell.classList.add("rangepicker__selected-from");
+        this.selectedToCell = null;
+  
+        this.rangePickerCells.forEach(cell => {
+          cell.classList.remove("rangepicker__selected-between");
+        });
+      }
 
     } else if (event.target === this.selectedToCell) {
       this.selectedToCell.classList.remove("rangepicker__selected-to");
@@ -215,73 +247,98 @@ export default class RangePicker {
       this.rangePickerCells.forEach(cell => {
         cell.classList.remove("rangepicker__selected-between");
       });
-
     } else {
       let targetDataMs = Date.parse(event.target.getAttribute("data-value")); 
-      let selectedFromMs = Date.parse(this.selectedFromCell.getAttribute("data-value"));
-      let selectedToMs = Date.parse(this.selectedToCell.getAttribute("data-value"));
+      let selectedFromMs = this.selectedFromCell !== null ? Date.parse(this.selectedFromCell.getAttribute("data-value")) : 0;
+      let selectedToMs = this.selectedToCell !== null ? Date.parse(this.selectedToCell.getAttribute("data-value")) : 0;
       
-      if (targetDataMs - selectedFromMs < 0) {
-        let selectedFromCellPreviousSibling = this.selectedFromCell.previousSibling;
-
-        while (selectedFromCellPreviousSibling !== event.target) {
-          selectedFromCellPreviousSibling.classList.add("rangepicker__selected-between");
-          // this.selectedBetweenCells.push(selectedFromCellPreviousSibling);
-
-          selectedFromCellPreviousSibling = selectedFromCellPreviousSibling.previousSibling;
+      if (targetDataMs < selectedToMs) {
+        if (this.selectedFromCell) {
+          this.selectedFromCell.classList.remove("rangepicker__selected-from");
         }
 
-        this.selectedFromCell.classList.remove("rangepicker__selected-from");
-        this.selectedFromCell.classList.add("rangepicker__selected-between");
+        if (targetDataMs < selectedFromMs) {
+          this.selectedToCell.classList.remove("rangepicker__selected-to");
+          this.selectedToCell = this.selectedFromCell;
+          this.selectedToCell.classList.add("rangepicker__selected-to");
+        }
+
         this.selectedFromCell = event.target;
         event.target.classList.add("rangepicker__selected-from");
+      } else if (this.selectedFromCell === null) {
+        this.selectedFromCell = event.target;
+        event.target.classList.add("rangepicker__selected-from");
+      } else if (this.selectedFromCell !== null && this.selectedToCell === null) {
+        if (selectedFromMs < targetDataMs) {
+          this.selectedToCell = event.target;
+          this.selectedToCell.classList.add("rangepicker__selected-to");
+        } else {
+          this.selectedFromCell.remove("rangepicker__selected-from");
+          this.selectedToCell = this.selectedFromCell;
+          this.selectedToCell.classList.add("rangepicker__selected-to");
 
-      // } else if (targetDataMs - selectedFromMs > 0 && targetDataMs - selectedToMs < 0) {
-        // let selectedFromCellNextSibling = this.selectedFromCell.nextSibling;
+          this.selectedFromCell = event.target;
+          this.selectedFromCell.add("rangepicker__selected-from");
+        }
+      } else {
+        if (this.selectedToCell) {
+          this.selectedToCell.classList.remove("rangepicker__selected-to");
+        }
 
-        // console.log(selectedFromCellNextSibling)
+        if (targetDataMs > selectedToMs && this.selectedToCell !== null) {
+          this.selectedFromCell.classList.remove("rangepicker__selected-from");
+          this.selectedFromCell = this.selectedFromCell;
+          this.selectedFromCell.classList.add("rangepicker__selected-from");
+        }
 
-        // while (selectedFromCellNextSibling !== event.target) {
-        //   selectedFromCellNextSibling.classList.remove("rangepicker__selected-between");
-        //   // this.selectedBetweenCells.push(selectedFromCellNextSibling);
-
-        //   selectedFromCellNextSibling = selectedFromCellNextSibling.nextSibling;
-        // }
-
-        // this.selectedFromCell.classList.remove("rangepicker__selected-from");
-        // this.selectedFromCell = event.target;
-        // event.target.classList.remove("rangepicker__selected-between");
-        // event.target.classList.add("rangepicker__selected-from");
-        
-        // this.rangePickerCells.forEach(cell => {
-        //   let cellDataMs = Date.parse(cell.getAttribute("data-value")); 
-        //   if (cellDataMs - selectedFromMs < 0 || selectedToMs - cellDataMs < 0) {
-        //     cell.classList.remove("rangepicker__selected-between");
-        //   }
-
-        // });
+        this.selectedToCell = event.target;
+        event.target.classList.add("rangepicker__selected-to");
       }
-      
 
+      selectedFromMs = Date.parse(this.selectedFromCell.getAttribute("data-value"));
+      selectedToMs = this.selectedToCell !== null ? Date.parse(this.selectedToCell.getAttribute("data-value")) : 0;
+
+      this.rangePickerCells.forEach(cell => {
+        let cellDataMs = Date.parse(cell.getAttribute("data-value")); 
+
+        if (cellDataMs < selectedFromMs || cellDataMs > selectedToMs) {
+          cell.classList.remove("rangepicker__selected-between");
+        } else if (cellDataMs === selectedFromMs || cellDataMs === selectedToMs) {
+          cell.classList.remove("rangepicker__selected-between");
+        } else {
+          cell.classList.add("rangepicker__selected-between");
+        }
+      });
     }
+
+    this.changeRangePickerSelectedDates();
+  }
+
+  toggleRangePickerSelector () {
+    this.rangePicker.classList.toggle("rangepicker_open");
   }
 
   initEventListeners () {
-    let rangepickerCells = Array.from(this.element.querySelectorAll(".rangepicker__cell"));
-
-    rangepickerCells.forEach(cell => {
+    this.rangePickerCells.forEach(cell => {
       cell.addEventListener('pointerdown', this.selectDate.bind(this));
+    });
+
+    let rangePickerInput = this.element.querySelector(".rangepicker__input");
+    rangePickerInput.addEventListener('pointerdown', this.toggleRangePickerSelector.bind(this));
+  }
+
+  removeClickEvents() {
+    this.rangePickerCells.forEach(cell => {
+      cell.removeEventListener('pointerdown', this.selectDate.bind(this));
     });
   }
 
   remove () {
     this.element.remove ();
-    // ...logic here
   }
 
   destroy () {
     this.remove();
-    // ...logic here
+    this.removeClickEvents();
   }
 }
-// rangepicker__selected-from
